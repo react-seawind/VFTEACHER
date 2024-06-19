@@ -14,14 +14,16 @@ const headers = {
 // =========================AdminLogin==============D
 export const AdminLogin = async (data) => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/adminLogin`, data);
+    const response = await axios.post(`${API_BASE_URL}/login`, data);
     if (response.data.status === true) {
-      const { Id, token } = response.data.responseData;
-      const teacherlogindata = { Id, token };
+      const { Id, Role, SchoolId } = response.data.responseData;
+      const teacherlogindata = { Id, Role, SchoolId };
+      const token = response.data.token;
       sessionStorage.setItem(
         'teacherlogindata',
         JSON.stringify(teacherlogindata),
       );
+      sessionStorage.setItem('token', JSON.stringify(token));
       toast('Login Successfully');
       return response;
     } else {
@@ -37,58 +39,16 @@ export const AdminLogin = async (data) => {
 // =========================getAdmindata=========================D
 export const getAdmindataById = async () => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/admin/${Id}`, {
+    const response = await axios.get(`${API_BASE_URL}/teacher/${Id}`, {
       headers,
     });
 
     if (response.data.status === true) {
-      return response.data;
+      return response.data.responseData;
     } else {
-      toast.error(response.data.message);
       throw new Error(response.data.message); // Throw error with API message
     }
   } catch (error) {
     throw error; // Rethrow the error for further handling
-  }
-};
-
-// ===================Edit Admin data================D
-export const UpdateAdminById = async (formData) => {
-  try {
-    const response = await axios.post(`${API_BASE_URL}/admin`, formData, {
-      headers,
-      'Content-Type': 'multipart/form-data',
-    });
-
-    if (response.data.status === true) {
-      toast.success(response.data.message);
-      return response.data;
-    } else {
-      toast.error(response.data.message);
-      throw new Error(response.data.message); // Throw error with API message
-    }
-  } catch (error) {
-    throw error; // Rethrow the error for further handling
-  }
-};
-// ===================ChangePassword================D
-export const ChangePassword = async (data) => {
-  try {
-    const response = await axios.post(
-      `${API_BASE_URL}/admin/changePassword`,
-      data,
-      {
-        headers,
-      },
-    );
-
-    if (response.data.status === true) {
-      toast.success(response.data.message);
-      return response.data;
-    } else {
-      toast.error(response.data.message);
-    }
-  } catch (error) {
-    throw error;
   }
 };

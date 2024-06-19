@@ -50,14 +50,14 @@ const DropdownUser = () => {
     const fetchData = async () => {
       try {
         const response = await getAdmindataById(adminId);
-        setAdminData(response.responsedata[0]);
+        setAdminData(response[0]);
       } catch (error) {
         console.log('Error fetching admin data');
       }
     };
     fetchData();
   }, [adminId]);
-
+  const Role = adminData.Role;
   return (
     <div className="relative">
       <Link
@@ -68,13 +68,15 @@ const DropdownUser = () => {
       >
         <span className="hidden text-right lg:block">
           <span className="block text-sm font-medium text-black dark:text-white">
-            {adminData.Name}
+            {adminData.TeacherName}
           </span>
-          <span className="block text-xs">{adminData.Role}</span>
+          <span className="block text-xs">
+            {Role === 0 ? 'Class teacher' : 'Subject teacher'}
+          </span>
         </span>
 
         <span className="h-14 w-14">
-          <img src={adminData.Image} alt="User" className="rounded border" />
+          <img src={adminData.Photo} alt="User" className="rounded border" />
         </span>
 
         <FaChevronDown
@@ -100,16 +102,6 @@ const DropdownUser = () => {
             >
               <FaUser />
               My Profile
-            </Link>
-          </li>
-
-          <li>
-            <Link
-              to="/settings"
-              className="flex items-center gap-3.5 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base"
-            >
-              <FcSettings />
-              Account Settings
             </Link>
           </li>
         </ul>

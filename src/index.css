@@ -124,3 +124,34 @@
 .fpBGKh {
   overflow: auto !important;
 }
+
+
+.dark .p-datatable-tbody tr,
+.dark .p-datatable-header,
+.dark .p-datatable-thead th,
+.dark .p-datatable-tbody tr {
+  background-color: #24303F !important;
+  color: white !important;
+}
+
+.dark .p-sortable-column-icon {
+  background-color: #24303F !important;
+  color: white !important;
+}
+
+.dark .p-paginator-bottom {
+  background-color: #24303F !important;
+  color: white !important;
+}
+
+.dark .p-inputtext,
+.dark .p-dropdown {
+  background-color: #24303F !important;
+  color: white !important;
+  border: 1px solid white !important;
+}
+
+.dark .p-dropdown-label {
+  color: white !important;
+  border: 0 !important
+}

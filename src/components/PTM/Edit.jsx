@@ -2,72 +2,90 @@ import React, { useEffect, useState } from 'react';
 import Breadcrumb from '../Breadcrumb';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import FormLoader from '../../common/FormLoader';
+import {
+  getPtmById,
+  getStudentByTeacherId,
+  updatePtmById,
+} from '../../API/PTMApi';
+import { format } from 'date-fns';
 
 const validationSchema = yup.object().shape({
-  Title: yup.string().required('PTM Name is required'),
-  Slug: yup.string().required('Slug is required'),
-  Image: yup.string().required('Image is required'),
+  StudentId: yup.string().required('Student is required'),
+  Title: yup.string().required('Title is required'),
+  ReportDate: yup.string().required('Date is required'),
 });
 
 const PTMEdit = () => {
   // ================ Get data by Id============
   const { Id } = useParams();
-  const [imagePreview, setImagePreview] = useState();
-  //   const fetchData = async () => {
-  //     try {
-  //       if (Id) {
-  //         const PTMData = await getPTMById(Id);
-  //          formik.setValues(PTMData);
-  // if (PTMData.Image) {
-  //   setImagePreview(PTMData.Image); // Update image preview if image exists
-  // }
+  const fetchData = async () => {
+    try {
+      if (Id) {
+        const PTMData = await getPtmById(Id);
+        formik.setValues(PTMData);
+        const ReportDate = format(new Date(PTMData.ReportDate), 'yyyy-MM-dd');
+        formik.setValues({
+          ...PTMData,
+          ReportDate: ReportDate,
+        });
+      } else {
+        console.log('error');
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
+  useEffect(() => {
+    fetchData();
+  }, [Id]);
 
-  //       } else {
-  //         console.log('error');
-  //       }
-  //     } catch (error) {
-  //       console.error('Error fetching data:', error);
-  //     }
-  //   };
-  // useEffect(() => {
+  // ------------Student DATA-------------------
+  const [student, setstudent] = useState([]);
 
-  //   fetchData();
-  // }, [Id]);
-
+  useEffect(() => {
+    const fetchStudent = async () => {
+      try {
+        const StudentData = await getStudentByTeacherId();
+        setstudent(StudentData);
+      } catch (error) {
+        console.error('Error fetching Student:', error);
+      }
+    };
+    fetchStudent();
+  }, []);
+  const [isFormLoading, setIsFormLoading] = useState(false);
   const formik = useFormik({
     initialValues: {
       Id: Id,
+      StudentId: '',
       Title: '',
-      Date: '',
-      Image: null,
-      Hid_Image: '',
+      ReportDate: '',
+      PDF: null,
+      Hid_PDF: '',
       Status: '',
     },
     validationSchema: validationSchema,
     onSubmit: async (values, actions) => {
+      setIsFormLoading(true);
       try {
         const formData = new FormData();
         Object.entries(values).forEach(([key, value]) => {
           formData.append(key, value);
         });
 
-        // await updatePTMById(formData);
-        // fetchData();
+        await updatePtmById(formData);
+        console.log(formData);
+        fetchData();
       } catch (error) {
         console.error('Error updating slider:', error);
+      } finally {
+        setIsFormLoading(false); // Set loading state to false when submission ends
       }
     },
   });
-  function getFileExtension(filename) {
-    if (typeof filename !== 'string') {
-      return 'Invalid filename';
-    }
-    if (filename.indexOf('.') === -1) {
-      return 'No file extension found';
-    }
-    return filename.split('.').pop().toLowerCase();
-  }
+
   const navigate = useNavigate();
 
   const handleGoBack = () => {
@@ -76,7 +94,7 @@ const PTMEdit = () => {
   return (
     <div>
       <Breadcrumb pageName="PTM Edit" />
-
+      {isFormLoading && <FormLoader loading={isFormLoading} />}
       <div className="grid grid-cols-1 gap-9 ">
         <div className="flex flex-col gap-9">
           {/* <!-- Input Fields --> */}
@@ -93,10 +111,36 @@ const PTMEdit = () => {
             <form onSubmit={formik.handleSubmit}>
               <input
                 type="hidden"
-                name="Hid_Image"
-                value={formik.values.Hid_Image}
+                name="Hid_PDF"
+                value={formik.values.Hid_PDF}
               />
               <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-5.5 py-3.5 px-5.5">
+                <div>
+                  <label className="mb-3 block text-black dark:text-white">
+                    Select Student <span className="text-danger">*</span>
+                  </label>
+
+                  <select
+                    name="StudentId"
+                    onChange={formik.handleChange}
+                    value={formik.values.StudentId}
+                    onBlur={formik.handleBlur}
+                    className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent py-1.5 px-3 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary"
+                  >
+                    <option>Select Student</option>
+                    {student.map((student) => (
+                      <option key={student.StudentId} value={student.StudentId}>
+                        {student.StudentName}
+                      </option>
+                    ))}
+                  </select>
+
+                  {formik.touched.StudentId && formik.errors.StudentId && (
+                    <small className="text-red-500">
+                      {formik.errors.StudentId}
+                    </small>
+                  )}
+                </div>
                 <div>
                   <label className="mb-3 block text-black dark:text-white">
                     Title <span className="text-danger">*</span>
@@ -123,16 +167,18 @@ const PTMEdit = () => {
                   </label>
                   <input
                     type="date"
-                    name="Date"
-                    value={formik.values.Date}
+                    name="ReportDate"
+                    value={formik.values.ReportDate}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                     placeholder="Enter PTM Name"
                     className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent py-1.5 px-3 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary"
                   />
 
-                  {formik.touched.Date && formik.errors.Date && (
-                    <small className="text-red-500">{formik.errors.Date}</small>
+                  {formik.touched.ReportDate && formik.errors.ReportDate && (
+                    <small className="text-red-500">
+                      {formik.errors.ReportDate}
+                    </small>
                   )}
                 </div>
                 <div>
@@ -141,42 +187,31 @@ const PTMEdit = () => {
                   </label>
                   <input
                     type="file"
-                    name="Image"
+                    name="PDF"
                     onChange={(event) => {
-                      formik.setFieldValue(
-                        'Image',
-                        event.currentTarget.files[0],
-                      );
+                      formik.setFieldValue('PDF', event.currentTarget.files[0]);
                     }}
                     className="w-full cursor-pointer rounded-lg border-[1.5px] border-stroke bg-transparent font-medium outline-none transition file:mr-5 file:border-collapse file:cursor-pointer file:border-0 file:border-r file:border-solid file:border-stroke file:bg-whiter file:py-3 file:px-5 file:hover:bg-primary file:hover:bg-opacity-10 focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:file:border-form-strokedark dark:file:bg-white/30 dark:file:text-white dark:focus:border-primary"
                   />
 
-                  {formik.touched.Image && formik.errors.Image && (
-                    <small className="text-red-500">
-                      {formik.errors.Image}
-                    </small>
+                  {formik.touched.PDF && formik.errors.PDF && (
+                    <small className="text-red-500">{formik.errors.PDF}</small>
                   )}
                   <p>Please select an a jpg, png, gif, jpeg, webp file only.</p>
                 </div>
                 <div className="mt-5">
                   <p>Your Exsisting PTM File</p>
-                  <div className="grid grid-cols-4 gap-2 relative">
-                    <div className="relative">
-                      {imagePreview ? (
-                        getFileExtension(imagePreview) === 'pdf' ? (
-                          <button className="rounded border p-2">
-                            Download Image
-                          </button>
-                        ) : (
-                          <img
-                            src={imagePreview}
-                            alt=""
-                            className="rounded border p-2 h-28 w-28"
-                          />
-                        )
-                      ) : (
-                        <p>No Data available</p>
-                      )}
+                  <div className="grid gap-2 relative">
+                    <div className="relative ">
+                      <button className="rounded border bg-primary text-white p-2">
+                        <Link
+                          to={formik.values.PDF}
+                          target="_blank"
+                          className="rounded bg-primary text-white p-2"
+                        >
+                          Download PDF
+                        </Link>
+                      </button>
                     </div>
                   </div>
                 </div>

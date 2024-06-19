@@ -5,33 +5,20 @@ import Config from './Config';
 const { API_BASE_URL } = Config; // Destructure the values from the config file
 
 const TOKEN = Config.getToken();
-const Id = Config.getId();
+const TeacherId = Config.getId();
+const SchoolId = Config.getSchoolId();
 
 const headers = {
   Authorization: `Bearer ${TOKEN}`, // Corrected typo from "Bareer" to "Bearer"
 };
 
-// =============================================================================
-// ==================================Subject======================================
-// =============================================================================
-// =========================Get All Subject=========================
-export const getAllSubject = async () => {
+// ---------------------------Ptm------------------------
+// ----------------------getStudentByTeacherId----------------
+export const getStudentByTeacherId = async () => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/subject`, {
-      headers,
-    });
-    return response.data.responsedata;
-  } catch (error) {
-    throw error;
-  }
-};
-
-// ----------------------getSubjectbyId----------------
-export const getSubjectById = async (Id) => {
-  try {
-    const response = await axios.get(`${API_BASE_URL}/subject/${Id}`, {
-      headers,
-    });
+    const response = await axios.get(
+      `${API_BASE_URL}/student/${SchoolId}/${TeacherId}`,
+    );
 
     if (response.data.status === true) {
       return response.data.responseData;
@@ -43,10 +30,40 @@ export const getSubjectById = async (Id) => {
     throw error; // Rethrow the error for further handling
   }
 };
-// ===================Edit Subject================D
-export const updateSubjectById = async (formData) => {
+
+// =========================Get All Ptm=========================
+export const getAllPtm = async () => {
   try {
-    const response = await axios.put(`${API_BASE_URL}/subject`, formData, {
+    const response = await axios.get(`${API_BASE_URL}/ptm`, {
+      headers,
+    });
+    return response.data.responsedata;
+  } catch (error) {
+    toast.error(response.data.message);
+  }
+};
+
+// ----------------------getPtmbyId----------------
+export const getPtmById = async (Id) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/ptm/${Id}`, {
+      headers,
+    });
+
+    if (response.data.status === true) {
+      return response.data.responsedata[0];
+    } else {
+      toast.error(response.data.message);
+      throw new Error(response.data.message); // Throw error with API message
+    }
+  } catch (error) {
+    throw error; // Rethrow the error for further handling
+  }
+};
+// ===================Edit Ptm================D
+export const updatePtmById = async (formData) => {
+  try {
+    const response = await axios.put(`${API_BASE_URL}/ptm`, formData, {
       headers,
       'Content-Type': 'multipart/form-data',
     });
@@ -63,10 +80,10 @@ export const updateSubjectById = async (formData) => {
   }
 };
 
-// ------------------------Add Subject---------------------
-export const AddSubject = async (formData) => {
+// ------------------------Add Ptm---------------------
+export const AddPtm = async (formData) => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/subject`, formData, {
+    const response = await axios.post(`${API_BASE_URL}/ptm`, formData, {
       headers,
     });
     if (response.data.status === true) {
@@ -80,10 +97,10 @@ export const AddSubject = async (formData) => {
     throw error; // Rethrow the error for further handling
   }
 };
-// ------------------------delete Subject---------------------
-export const deleteSubject = async (Id) => {
+// ------------------------delete Ptm---------------------
+export const deletePtm = async (Id) => {
   try {
-    const response = await axios.delete(`${API_BASE_URL}/subject/${Id}`, {
+    const response = await axios.delete(`${API_BASE_URL}/ptm/${Id}`, {
       headers,
     });
     if (response.data.status === true) {

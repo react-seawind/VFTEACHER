@@ -1,12 +1,8 @@
 import { lazy } from 'react';
 
 import Profile from '../pages/Profile';
-import Settings from '../pages/Settings';
 import ECommerce from '../pages/Dashboard/ECommerce';
 import SignIn from '../pages/Authentication/SignIn';
-import Paymentreport from '../components/Datamanager/Paymentreport';
-import Schoolreport from '../components/Datamanager/Schoolreport';
-import MyQuillEditor from '../components/QuillEditor';
 import AttendanceListing from '../components/Attendance/Listing';
 import AttendancedAdd from '../components/Attendance/Add';
 import AttendanceEdit from '../components/Attendance/Edit';
@@ -33,25 +29,6 @@ const coreRoutes = [
     path: '/dashboard', //dashboard
     title: 'dashboard',
     component: ECommerce,
-  },
-  {
-    path: '/settings', //Setting
-    title: 'Settings',
-    component: Settings,
-  },
-
-  // =================REPOET=============
-  {
-    path: '/schoolreport',
-    component: Schoolreport,
-  },
-  {
-    path: '/paymentreport',
-    component: Paymentreport,
-  },
-  {
-    path: '/new',
-    component: MyQuillEditor,
   },
 
   // =================standard=============

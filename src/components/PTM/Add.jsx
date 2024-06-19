@@ -1,33 +1,58 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Breadcrumb from '../Breadcrumb';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
 import { useNavigate } from 'react-router-dom';
+import FormLoader from '../../common/FormLoader';
+import { AddPtm, getStudentByTeacherId } from '../../API/PTMApi';
 
 const validationSchema = yup.object().shape({
+  StudentId: yup.string().required('Student is required'),
   Title: yup.string().required('Title is required'),
-  Date: yup.string().required('Date is required'),
-  Image: yup.string().required('Image is required'),
+  ReportDate: yup.string().required('Date is required'),
+  PDF: yup.string().required('PTM is required'),
 });
 
 const PTMAdd = () => {
+  const [isFormLoading, setIsFormLoading] = useState(false);
+
+  // ------------Student DATA-------------------
+  const [student, setstudent] = useState([]);
+
+  useEffect(() => {
+    const fetchStudent = async () => {
+      try {
+        const StudentData = await getStudentByTeacherId();
+        setstudent(StudentData);
+      } catch (error) {
+        console.error('Error fetching Student:', error);
+      }
+    };
+    fetchStudent();
+  }, []);
+
   const formik = useFormik({
     initialValues: {
+      StudentId: '',
       Title: '',
-      Date: '',
-      Image: '',
-      Status: '',
+      ReportDate: new Date().toISOString().substring(0, 10),
+      PDF: '',
+      Status: '1',
     },
     validationSchema: validationSchema,
     onSubmit: async (values, actions) => {
+      setIsFormLoading(true);
       try {
         const formData = new FormData();
         Object.entries(values).forEach(([key, value]) => {
           formData.append(key, value);
         });
+        await AddPtm(formData);
         navigate('/ptm/listing');
       } catch (error) {
         console.error('Error adding PTM:', error);
+      } finally {
+        setIsFormLoading(false); // Set loading state to false when submission ends
       }
     },
   });
@@ -40,7 +65,7 @@ const PTMAdd = () => {
   return (
     <div>
       <Breadcrumb pageName="PTM Add " />
-
+      {isFormLoading && <FormLoader loading={isFormLoading} />}
       <div className="grid grid-cols-1 gap-9 ">
         <div className="flex flex-col gap-9">
           {/* <!-- Input Fields --> */}
@@ -56,6 +81,30 @@ const PTMAdd = () => {
 
             <form onSubmit={formik.handleSubmit}>
               <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-5.5 py-3.5 px-5.5">
+                <div>
+                  <label className="mb-3 block text-black dark:text-white">
+                    Select Student <span className="text-danger">*</span>
+                  </label>
+
+                  <select
+                    name="StudentId"
+                    onChange={formik.handleChange}
+                    className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent py-1.5 px-3 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary"
+                  >
+                    <option>Select Student</option>
+                    {student.map((student) => (
+                      <option key={student.StudentId} value={student.StudentId}>
+                        {student.StudentName}
+                      </option>
+                    ))}
+                  </select>
+
+                  {formik.touched.StudentId && formik.errors.StudentId && (
+                    <small className="text-red-500">
+                      {formik.errors.StudentId}
+                    </small>
+                  )}
+                </div>
                 <div>
                   <label className="mb-3 block text-black dark:text-white">
                     Title <span className="text-danger">*</span>
@@ -82,16 +131,18 @@ const PTMAdd = () => {
                   </label>
                   <input
                     type="date"
-                    name="Date"
-                    value={formik.values.Date}
+                    name="ReportDate"
+                    value={formik.values.ReportDate}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                     placeholder="Enter PTM Name"
                     className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent py-1.5 px-3 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary"
                   />
 
-                  {formik.touched.Date && formik.errors.Date && (
-                    <small className="text-red-500">{formik.errors.Date}</small>
+                  {formik.touched.ReportDate && formik.errors.ReportDate && (
+                    <small className="text-red-500">
+                      {formik.errors.ReportDate}
+                    </small>
                   )}
                 </div>
                 <div>
@@ -100,28 +151,23 @@ const PTMAdd = () => {
                   </label>
                   <input
                     type="file"
-                    name="Image"
+                    name="PDF"
                     onChange={(event) => {
-                      formik.setFieldValue(
-                        'Image',
-                        event.currentTarget.files[0],
-                      );
+                      formik.setFieldValue('PDF', event.currentTarget.files[0]);
                     }}
                     className="w-full cursor-pointer rounded-lg border-[1.5px] border-stroke bg-transparent font-medium outline-none transition file:mr-5 file:border-collapse file:cursor-pointer file:border-0 file:border-r file:border-solid file:border-stroke file:bg-whiter file:py-3 file:px-5 file:hover:bg-primary file:hover:bg-opacity-10 focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:file:border-form-strokedark dark:file:bg-white/30 dark:file:text-white dark:focus:border-primary"
                   />
 
-                  {formik.touched.Image && formik.errors.Image && (
-                    <small className="text-red-500">
-                      {formik.errors.Image}
-                    </small>
+                  {formik.touched.PDF && formik.errors.PDF && (
+                    <small className="text-red-500">{formik.errors.PDF}</small>
                   )}
-                  <p>Please select an a jpg, png, gif, jpeg, webp file only.</p>
+                  <p>Please select an a Pdf file only.</p>
                 </div>
               </div>
 
               <div className="flex flex-col gap-2.5 py-3.5 px-5.5">
                 <label className="mb-3 block text-black dark:text-white">
-                  PTM <span className="text-danger">*</span>
+                  Status <span className="text-danger">*</span>
                 </label>
                 <div className="relative">
                   <div>
@@ -133,7 +179,7 @@ const PTMAdd = () => {
                       value="1"
                       checked={formik.values.Status == '1'}
                     />
-                    Present
+                    Active
                   </div>
                   <div>
                     <input
@@ -144,7 +190,7 @@ const PTMAdd = () => {
                       value="0"
                       checked={formik.values.Status == '0'}
                     />
-                    Absent
+                    InActive
                   </div>
                 </div>
                 <p>Please select an a one status by default is inactive.</p>
